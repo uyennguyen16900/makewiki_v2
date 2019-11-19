@@ -2,11 +2,10 @@ from django.shortcuts import render, redirect
 from django.views.generic.list import ListView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import CreateView
-from django.urls import reverse
+from django.urls import reverse, reverse_lazy
 
 from wiki.models import Page
 from wiki.forms import PageForm
-
 
 class PageListView(ListView):
     """ Renders a list of all Pages. """
@@ -33,17 +32,12 @@ class PageDetailView(DetailView):
 class PageAddView(CreateView):
     """"""
     model = Page
-
-    def get(self, request):
-        """Render edit page"""
-        form = PageForm()
-        template_name = 'add.html'
-        return render(request, template_name, {'form': form})
+    form_class = PageForm
+    template_name = 'add.html'
 
     def post(self, request):
         form = PageForm(request.POST)
+        form.instance.author = self.request.user
         if form.is_valid():
             page = form.save(commit=False)
-            page.save()
             return redirect('wiki-details-page', slug=page.slug)
-        return render(request, 'add.html', {'form': form})
